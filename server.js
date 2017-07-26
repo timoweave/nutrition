@@ -1,0 +1,203 @@
+"use strict";
+
+import path from "path";
+import express from "express";
+import mongoose from "mongoose";
+import commander from "commander";
+import moment from 'moment-timezone';
+import body_parser from "body-parser";
+import database from "./database.js";
+
+class App {
+
+    constructor(port, mongo) {
+        this.port = port;
+        this.mongo = mongo;
+        this.app = express();
+        this.uses();
+        this.mcdonalds();
+    }
+
+    mcdonalds = () => {
+        const app = this.app;
+        const api = "/mcdonalds/";
+        const one = "/mcdonalds/:id([0-9a-f]+)";
+
+        app.get(api, find_few_mcdonalds);
+        app.get(one, find_one_mcdonalds);
+        app.post(api, save_mcdonalds);
+        app.put(api, replace_mcdonalds);
+        app.patch(api, update_mcdonalds);
+        app.delete(api, remove_mcdonalds);
+
+        async function save_mcdonalds(req, res) { try {
+            const data = req.body;
+            req.log.print({data});
+            const model = database.models.McDonalds;
+            const result = new model(data);
+            await result.save();
+            res.status(200).json({_id : result._id});
+        } catch(e) {
+            res.status(400).json(e);
+        } }
+
+        async function find_one_mcdonalds(req, res) { try {
+            req.log.print({_id: req.params.id});
+            const query = {_id: req.params.id};
+            const {filter} = extract_query(req);
+            const model = database.models.McDonalds;
+            req.log.print({model: model.modelName, query, filter});
+            const result = await model.findOne(query, filter);
+            res.status(400).json(result);
+        } catch (e) {
+            res.status(400).json(e);
+        } }
+
+        async function find_few_mcdonalds(req, res) { try {
+            const {query, skip, limit, filter} = extract_query(req);
+
+            const model = database.models.McDonalds;
+            req.log.print({model: model.modelName, query, skip, limit});
+            const results = await model.find(query, filter).skip(skip).limit(limit);
+            const select = Object.keys(filter).reduce((r, i) => (r.concat(i)), []);
+            const data = ((results.length === 1)
+                          ? results[0]
+                          : { query : {skip, limit, select}, rows : results });
+            req.log.print({data});
+            res.status(200).json(data);
+        } catch (e) {
+            res.status(404).json(e);
+        } }
+
+        async function update_mcdonalds(req, res) {
+            not_allowed(req, res);
+        }
+
+        async function replace_mcdonalds(req, res) {
+            not_allowed(req, res);
+        }
+
+        async function remove_mcdonalds(req, res) {
+            not_allowed(req, res);
+        }
+
+        function extract_query(req, default_skip=0, default_limit=5,
+                               default_select=["Item", "Total Fat", "Trans Fat"]) {
+            const query = Object.assign({}, req.query);
+            const skip = parseInt(query.skip) || default_skip;
+            const limit = parseInt(query.limit) || default_limit;
+            const select_keys = (query.select
+                            ? (Array.isArray(query.select) ? query.select : [query.select])
+                            : default_select);
+            const schema_keys = Object.keys(database.jsons.McDonalds);
+            Object.keys(query) // remove unrecognized nutrition keys
+                .filter(q => ( !schema_keys.includes(q) ))
+                .forEach(q => { delete query[q]; });
+            // req.log.print({select_keys});
+            const filter = (select_keys.includes("*")
+                            ? schema_keys.reduce((r, k) => {r[k] = 1; return r;}, {})
+                            : select_keys.reduce((r, k) => {r[k] = 1; return r;}, {}));
+            return {query, skip, limit, filter};
+        }
+
+        function not_allowed(req, res) {
+            const data = {
+                method: req.method,
+                path: req.path,
+                message: "method not allowed"
+            };
+            res.status(405).json(data);
+        }
+    };
+
+    log = () => {
+        const now = this.now;
+        let rid = 0; // rid = request id / counter
+        return info;
+
+        function info(req, res, next) {
+            req.log = {rid: rid++, print: print(req) };
+            const data = {[req.method]: req.path, time: now()};
+            if (Object.keys(req.query).length) {
+                data.query = req.query;
+            }
+            req.log.print(data);
+            res.on("finish", () => { req.log.print({status: res.statusCode, time: now()});});
+            next();
+        }
+
+        function print(req) {
+            return (...args) => {
+                const obj = args.reduce((ans, arg) => {
+                    ans = Object.assign({}, ans, arg);
+                    return ans;
+                }, {rid: req.log.rid});
+                console.log(obj);
+            };
+        }
+    }
+
+
+    now = () => {
+        const zone = 'America/Los_Angeles';
+        const format = 'YYYY/MM/DD h:mm:ssa z';
+        const time = new moment();
+        return time.tz(zone).format(format);
+    };
+
+    uses = () => {
+        const app = this.app;
+        app.use(this.log());
+        app.use(body_parser.json());
+        app.use(body_parser.urlencoded({ extended: true }));
+        app.use(express.static(path.resolve(__dirname)));
+    };
+
+    run = async () => { try {
+        const setup = {
+            port: this.port,
+            mongo: this.mongo,
+            dir: __dirname,
+            time : this.now()
+        };
+        console.log(setup);
+        await mongoose.connect(this.mongo, {useMongoClient: true});
+        await this.app.listen(this.port);
+        return this.app;
+    } catch (e) {
+        throw e;
+    } };
+
+    static parse(argv) {
+        const dash = commander;
+        dash.option("-p, --port <port>", "port number", /[3-9][0-9][0-9][0-9]/,
+                    "8080");
+        dash.option("-m, --mongo <mongo>", "mongo address", /mongodb:\/\/\S+:\d+\/\S+/,
+                    "mongodb://localhost:27017/nutrition");
+        dash.parse(argv);
+        const option = {
+            port: dash.port,
+            mongo : dash.mongo
+        };
+        return option;
+    }
+}
+
+async function run(port="8080", mongo="mongodb://localhost:27017/nutrition") { try {
+    console.log("booting...");
+    const app = new App(port, mongo);
+    await app.run();
+    console.log("running...");
+    return app;
+} catch(e) {
+    throw e;
+} }
+
+module.exports = {
+    App
+};
+
+if (!module.parent) {
+    const {port, mongo} = App.parse(process.argv);
+    run(port, mongo);
+}
