@@ -1,4 +1,4 @@
-# Coding Challenge : Thinfilm 
+# Nutrition Coding Challenge
 
 The package.json is right now in develop version, and the "dependencies" will be defined after production is tested (moving only those needed ones from devDependencies to dependencies).
 
