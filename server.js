@@ -9,13 +9,15 @@ import body_parser from "body-parser";
 import database from "./database.js";
 
 class App {
-
-    constructor(port, mongo) {
+    constructor(port="8080", mongo="mongodb://localhost:27017/nutrition") {
         this.port = port;
         this.mongo = mongo;
         this.app = express();
         this.uses();
         this.mcdonalds();
+
+        this.app.get('/', (req, res) => res.sendFile(path.join(__dirname, "./index.html")));
+        this.app.get('*', (req, res) => res.sendFile(path.join(__dirname, "./index.html")));
     }
 
     mcdonalds = () => {
@@ -55,14 +57,11 @@ class App {
 
         async function find_few_mcdonalds(req, res) { try {
             const {query, skip, limit, filter} = extract_query(req);
-
             const model = database.models.McDonalds;
             req.log.print({model: model.modelName, query, skip, limit});
             const results = await model.find(query, filter).skip(skip).limit(limit);
             const select = Object.keys(filter).reduce((r, i) => (r.concat(i)), []);
-            const data = ((results.length === 1)
-                          ? results[0]
-                          : { query : {skip, limit, select}, rows : results });
+            const data = { query : {skip, limit, select}, rows : results };
             req.log.print({data});
             res.status(200).json(data);
         } catch (e) {
@@ -82,7 +81,8 @@ class App {
         }
 
         function extract_query(req, default_skip=0, default_limit=5,
-                               default_select=["Item", "Total Fat", "Trans Fat"]) {
+                               default_select=["Item", "Total Fat", "Trans Fat"],
+                               default_sort=["Total Fat", "Trans Fat"]) {
             const query = Object.assign({}, req.query);
             const skip = parseInt(query.skip) || default_skip;
             const limit = parseInt(query.limit) || default_limit;
@@ -93,7 +93,7 @@ class App {
             Object.keys(query) // remove unrecognized nutrition keys
                 .filter(q => ( !schema_keys.includes(q) ))
                 .forEach(q => { delete query[q]; });
-            // req.log.print({select_keys});
+
             const filter = (select_keys.includes("*")
                             ? schema_keys.reduce((r, k) => {r[k] = 1; return r;}, {})
                             : select_keys.reduce((r, k) => {r[k] = 1; return r;}, {}));
@@ -163,7 +163,7 @@ class App {
         console.log(setup);
         await mongoose.connect(this.mongo, {useMongoClient: true});
         await this.app.listen(this.port);
-        return this.app;
+        return this;
     } catch (e) {
         throw e;
     } };
@@ -174,17 +174,21 @@ class App {
                     "8080");
         dash.option("-m, --mongo <mongo>", "mongo address", /mongodb:\/\/\S+:\d+\/\S+/,
                     "mongodb://localhost:27017/nutrition");
-        dash.parse(argv);
+        if (argv) {
+            dash.parse(argv);
+        }
         const option = {
             port: dash.port,
             mongo : dash.mongo
         };
+        console.log({option});
         return option;
     }
 }
 
-async function run(port="8080", mongo="mongodb://localhost:27017/nutrition") { try {
+async function run(argv) { try {
     console.log("booting...");
+    const {port, mongo} = App.parse(argv);
     const app = new App(port, mongo);
     await app.run();
     console.log("running...");
@@ -194,10 +198,9 @@ async function run(port="8080", mongo="mongodb://localhost:27017/nutrition") { t
 } }
 
 module.exports = {
-    App
+    App, run
 };
 
 if (!module.parent) {
-    const {port, mongo} = App.parse(process.argv);
-    run(port, mongo);
+    run(process.argv);
 }
