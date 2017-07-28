@@ -7,6 +7,18 @@ To make the response data more self explained, the "Item" info is returned also 
 
 The restful query can be using any schema key, such as "Item", "Category", "Calories", "Total Fat", or "Total Fat (% Daily Value)" to enhance better query. 
 
+React frontend is added so that one can browse the database on the single page application.
+
+![Screenshot](screenshot.png)
+
+# Frontend Stack
+
+The frontend is mainly comprise of react, redux, and webpack, material-ui, plus others. Few component is connected to a specific store. Most of react components are function component for speed. There is one Top container component. The reducer, action, and dispatch is written very differently from typical redux guideline. It is because class/object orient programming makes organizing redux's various parts easier.
+
+
+# Backend Stack
+The backend is mainly comprised of node, express, mongo, plus various other, like babel, moment, commander, and body-parser. Also, async/await is added with babel to make server handling async easier.
+
 ## Menu Item Keys
 Each menu item has the following keys, which can be used in API query, such as GET /mcdonalds?select=Calories&select=Trans+Fat&select=Item to get first 5 menu items and show their Item, Calories, and Trans Fat  
 1. Category
