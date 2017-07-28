@@ -85,7 +85,8 @@ class App {
                                default_sort=["Total Fat", "Trans Fat"]) {
             const query = Object.assign({}, req.query);
             const skip = parseInt(query.skip) || default_skip;
-            const limit = parseInt(query.limit) || (!isNaN(parseInt(query.limit))) ? default_limit : NaN;
+            const limit = parseInt(query.limit) || ((!isNaN(parseInt(query.limit))) ? default_limit : NaN);
+            req.log.print({query, skip, limit});
             const select_keys = (query.select
                             ? (Array.isArray(query.select) ? query.select : [query.select])
                             : default_select);
@@ -131,8 +132,8 @@ class App {
                 const obj = args.reduce((ans, arg) => {
                     ans = Object.assign({}, ans, arg);
                     return ans;
-                }, {rid: req.log.rid});
-                console.log(obj);
+                }, {request: req.log.rid});
+                console.log(JSON.stringify(obj, null, 4));
             };
         }
     }
@@ -157,7 +158,7 @@ class App {
         const setup = {
             port: this.port,
             mongo: this.mongo,
-            dir: __dirname,
+            dir: path.resolve(__dirname),
             time : this.now()
         };
         console.log(setup);
@@ -170,10 +171,10 @@ class App {
 
     static parse(argv) {
         const dash = commander;
-        dash.option("-p, --port <port>", "port number", /[3-9][0-9][0-9][0-9]/,
-                    "8080");
-        dash.option("-m, --mongo <mongo>", "mongo address", /mongodb:\/\/\S+:\d+\/\S+/,
-                    "mongodb://localhost:27017/nutrition");
+        dash.option("-p, --port <port>", "port number",
+                    /[3-9][0-9][0-9][0-9]/, "8080");
+        dash.option("-m, --mongo <mongo>", "mongo address",
+                    /mongodb:\/\/\S+:\d+\/\S+/, "mongodb://localhost:27017/nutrition");
         if (argv) {
             dash.parse(argv);
         }
@@ -181,13 +182,11 @@ class App {
             port: dash.port,
             mongo : dash.mongo
         };
-        console.log({option});
         return option;
     }
 }
 
 async function run(argv) { try {
-    console.log("booting...");
     const {port, mongo} = App.parse(argv);
     const app = new App(port, mongo);
     await app.run();

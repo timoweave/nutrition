@@ -47,9 +47,9 @@ const Menu = {
             return {type, payload};
         },
         */
-        get_few_menu : () => {
+        get_few_menu : (skip=0, limit=20) => {
             const type = Menu.GET_MENU;
-            const payload = request_few_menu();
+            const payload = request_few_menu(skip, limit);
             return {type, payload};
         },
         get_one_menu : (id) => {
@@ -93,8 +93,8 @@ function request_one_menu(id) {
     });
 }
 
-function request_few_menu() {
-    const url = '/mcdonalds?limit=*&select=*';
+function request_few_menu(skip=0, limit=20) {
+    const url = `/mcdonalds?skip=${skip}&limit=${limit}&select=*`;
     return axios.get(url).then((response)=> {
         return response.data.rows;
     }).catch((err) => {

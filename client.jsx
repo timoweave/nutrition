@@ -23,7 +23,7 @@ import {Data, Menu} from "./store.js";
 
 $(document).ready(app);
 
-function Label({left, right, size, line="visible", padding="", weight="normal"}) {
+export function Label({left, right, size, line="visible", padding="", weight="normal"}) {
     return (
         <div>
           <div>
@@ -40,19 +40,7 @@ function Label({left, right, size, line="visible", padding="", weight="normal"})
     function rhs() { return {fontSize: size, fontWeight: weight, float: "right", marginLeft: "0.5em"}; }
 }
 
-function Bar({size}) {
-    return (
-        <hr style={styles()}/>
-    );
-
-    function styles() {
-        return (size
-                ? {borderStyle: "solid", borderWidth: size}
-                : {});
-    }
-}
-
-function Chunk({label, field, unit, bold, line, offset, slant, n}) {
+export function Chunk({label, field, unit, bold, line, offset, slant, n}) {
     if (bad()) { return null; }
 
     return (
@@ -67,9 +55,15 @@ function Chunk({label, field, unit, bold, line, offset, slant, n}) {
             <span style={right()}>{details()}</span>
             <span style={center()}>&nbsp;</span>
           </div>
-          <Bar size={line}/>
+          <hr style={styles(line)}/>
         </div>
     );
+
+    function styles(line) {
+        return (line
+                ? {borderStyle: "solid", borderWidth: line}
+                : {});
+    }
 
     function bad() {
         return ((!n) ||
@@ -118,7 +112,7 @@ function Chunk({label, field, unit, bold, line, offset, slant, n}) {
     function right() { return {float: "right", marginLeft: "10px"}; }
 }
 
-function Note(props) {
+export function Note(props) {
     return (
         <div>
           <p style={{lineHeight: "normal", fontSize:"0.6em"}}>
@@ -152,7 +146,7 @@ function Note(props) {
     }; }
 }
 
-function Nutrition({nutrition: n}) {
+export function Nutrition({nutrition: n}) {
     if (!n) { return null; }
 
     return (
@@ -204,7 +198,7 @@ function Nutrition({nutrition: n}) {
     }
 }
 
-const DrawerMenuItems = ({items, open, width, onRequestChange}) => {
+export function DrawerMenuItems({items, open, width, onRequestChange}) {
     if (!items) { return null; }
     return (
         <Drawer open={open} onRequestChange={onRequestChange} width={width}
@@ -223,7 +217,7 @@ const DrawerMenuItems = ({items, open, width, onRequestChange}) => {
 
     function style() { return {
         menu : {
-            color: "#f5f5f5", backgroundColor: "#546e7a"
+            // color: "white", backgroundColor: "#b0bec5"
         },
         index : {
             marginRight: "0.8em"
@@ -232,13 +226,12 @@ const DrawerMenuItems = ({items, open, width, onRequestChange}) => {
 
     function goto(item, history) {
         return () => {
-            // onRequestChange();
             history.push('/'+item._id);
         };
     }
 };
 
-function ConnectedDrawer(props) {
+export function ConnectedDrawerMenuItems(props) {
     const BindedDrawer = connect(states(props), dispatches)(DrawerMenuItems);
     return (<BindedDrawer/>);
 
@@ -255,7 +248,7 @@ function ConnectedDrawer(props) {
 
 }
 
-function ConnectedNutrition(props) {
+export function ConnectedNutrition(props) {
     const BindedNutrition = connect(states(props), dispatches)(Nutrition);
     return (<BindedNutrition/>);
 
@@ -274,7 +267,31 @@ function ConnectedNutrition(props) {
     }; }
 }
 
-class Top extends Component {
+export class Top extends Component {
+    render() {
+        return (
+            <div>
+              <ConnectedDrawerMenuItems open={this.state.drawer_shown}
+                                        width={this.state.drawer_width}
+                                        onRequestChange={this.toggle_drawer}/>
+              <div style={this.style().drawer_content}>
+                <Card expanded={true} initiallyExpanded={true} style={this.style().card}>
+                  <CardActions>
+                    <FloatingActionButton label="Menu" onTouchTap={this.toggle_drawer}
+                                          style={this.style().drawer_button}>
+                      <NavigationMenu style={{color: "white"}}/>
+                    </FloatingActionButton>
+                  </CardActions>
+                  <CardText expandable={true}>
+                    {/* content */}
+                    {this.props.children}
+                  </CardText>
+                </Card>
+              </div>
+            </div>
+        );
+    }
+
     constructor(props) {
         super(props);
         this.state = {
@@ -307,34 +324,10 @@ class Top extends Component {
             }
         };
     }
-
-    render() {
-        return (
-            <div>
-              <ConnectedDrawer open={this.state.drawer_shown}
-                               width={this.state.drawer_width}
-                               onRequestChange={this.toggle_drawer}/>
-              <div style={this.style().drawer_content}>
-                <Card expanded={true} initiallyExpanded={true} style={this.style().card}>
-                  <CardActions>
-                    <FloatingActionButton label="Menu" onTouchTap={this.toggle_drawer}
-                                          style={this.style().drawer_button}>
-                      <NavigationMenu style={{color: "white"}}/>
-                    </FloatingActionButton>
-                  </CardActions>
-                  <CardText expandable={true}>
-                    {/* content */}
-                    {this.props.children}
-                  </CardText>
-                </Card>
-              </div>
-            </div>
-        );
-    }
 }
 
-function app() {
-    const spa = (
+export function SPA() {
+    return (
         <Provider store={storage()}>
           <MuiThemeProvider muiTheme={get_theme()}>
             <BrowserRouter>
@@ -348,22 +341,12 @@ function app() {
           </MuiThemeProvider>
         </Provider>
     );
-    injectTapEventPlugin(); // NOTE: for material-ui, before ReactDom.render
-    ReactDom.render(spa, root());
-    return null;
 
     function storage() {
         const data = new Data();
         window.data = data;
         window.store = data.store;
         return data.store;
-    }
-
-    function root() {
-        const div = document.createElement("div");
-        document.body.append(div);
-        document.body.style.margin = "0px";
-        return div;
     }
 
     function get_theme() {
@@ -383,4 +366,18 @@ function app() {
         }, theme_opt);
         return theme;
     }
+}
+
+export default function app() {
+    injectTapEventPlugin(); // NOTE: for material-ui, before ReactDom.render
+    ReactDom.render(<SPA/>, root());
+    return null;
+
+    function root() {
+        const div = document.createElement("div");
+        document.body.append(div);
+        document.body.style.margin = "0px";
+        return div;
+    }
+
 }
