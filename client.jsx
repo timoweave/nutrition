@@ -1,92 +1,46 @@
 "use strict";
 
 import $ from "jquery";
-import moment from "moment";
-import React from "react";
-import {Component} from "react";
+import React, {Component} from "react";
 import ReactDom from "react-dom";
-import {BrowserRouter, Switch, Route } from "react-router-dom";
-import {Grid, Row, Col} from "react-bootstrap";
+import {Provider, connect} from "react-redux";
+import {BrowserRouter, Switch, Route, withRouter} from "react-router-dom";
 
 import AppBar from "material-ui/AppBar";
-import {Card, CardActions, CardHeader, CardMedia, CardTitle, CardText} from "material-ui/Card";
-import FlatButton from "material-ui/FlatButton";
+import Drawer from "material-ui/Drawer";
+import Snackbar from 'material-ui/Snackbar';
+import MenuItem from 'material-ui/MenuItem';
+import NavigationMenu from 'material-ui/svg-icons/navigation/menu';
+
+import {Card, CardActions, CardText} from "material-ui/Card";
+import FloatingActionButton from 'material-ui/FloatingActionButton';
 import getMuiTheme from "material-ui/styles/getMuiTheme";
 import MuiThemeProvider from "material-ui/styles/MuiThemeProvider";
 import {deepOrange100, deepOrange500, deepOrange700} from "material-ui/styles/colors";
 import injectTapEventPlugin from "react-tap-event-plugin";
 
-const item1 = {
-    "_id": "5977ce8bec3a42956a5dd079",
-    "Category": "Breakfast",
-    "Item": "Egg McMuffin",
+import {Data, Menu} from "./store.js";
 
-    "Serving Size": "4.8 oz (136 g)",
-    "Calories": 300,
-    "Calories from Fat": 120,
+$(document).ready(app);
 
-    "Total Fat": 13,
-    "Total Fat (% Daily Value)": 20,
-    "Saturated Fat": 5,
-    "Saturated Fat (% Daily Value)": 25,
-    "Trans Fat": 0,
-
-    "Cholesterol": 260,
-    "Cholesterol (% Daily Value)": 87,
-
-    "Sodium": 750,
-    "Sodium (% Daily Value)": 31,
-
-    "Carbohydrates": 31,
-    "Carbohydrates (% Daily Value)": 10,
-    "Dietary Fiber": 4,
-    "Dietary Fiber (% Daily Value)": 17,
-    "Sugars": 3,
-
-    "Protein": 17,
-
-    "Vitamin A (% Daily Value)": 10,
-    "Vitamin C (% Daily Value)": 0,
-    "Iron (% Daily Value)": 15,
-    "Calcium (% Daily Value)": 25
-
-};
-
-const L = ({label, size, weight="normal"}) => { // left label
-    return (
-        <div>
-          <span style={styles()}>{label}</span>
-          <hr/>
-        </div>
-    );
-
-    function styles() {
-        return {
-            fontSize: size,
-            fontWeight: weight
-        };
-    }
-};
-
-const R = ({label, size, weight="normal"}) => { // right label
-
+function Label({left, right, size, line="visible", padding="", weight="normal"}) {
     return (
         <div>
           <div>
-            <span style={left()}>&nbsp;</span>
-            <span style={right()}>{label}</span>
+            <span style={lhs()}>{left}</span>
+            <span style={rhs()}>{right}</span>
             <span style={center()}>&nbsp;</span>
           </div>
-          <hr/>
+          <hr style={{visibility:line, padding: padding}}/>
         </div>
     );
 
-    function left() { return  {float: "left", marginRight: "10px"}; }
-    function center() { return  {display: "block", overflow: "auto", position: "relative", top: "-4px"}; }
-    function right() { return {fontSize: size, fontWeight: weight, float: "right", marginLeft: "10px"}; }
-};
+    function lhs() { return  {float: "left", marginRight: "0.5em", fontSize: size, fontWeight: weight}; }
+    function center() { return  {display: "block", overflow: "auto", position: "relative", top: "-0.25em"}; }
+    function rhs() { return {fontSize: size, fontWeight: weight, float: "right", marginLeft: "0.5em"}; }
+}
 
-const B = ({size}) => { // bar
+function Bar({size}) {
     return (
         <hr style={styles()}/>
     );
@@ -96,12 +50,10 @@ const B = ({size}) => { // bar
                 ? {borderStyle: "solid", borderWidth: size}
                 : {});
     }
-};
+}
 
-const N = ({label, field, unit, bold, line, offset, slant, n}) => { // item
-    if (bad()) {
-        return null;
-    }
+function Chunk({label, field, unit, bold, line, offset, slant, n}) {
+    if (bad()) { return null; }
 
     return (
         <div style={space()}>
@@ -112,23 +64,23 @@ const N = ({label, field, unit, bold, line, offset, slant, n}) => { // item
               <span>&nbsp;</span>
               <span>{value()}</span>
             </span>
-            <span style={right()}>{daily()}</span>
+            <span style={right()}>{details()}</span>
             <span style={center()}>&nbsp;</span>
           </div>
-          <B size={line}/>
+          <Bar size={line}/>
         </div>
     );
 
     function bad() {
         return ((!n) ||
                 (Object.keys(n).length === 0) ||
-                ((daily()===null) && (value() === null)));
+                ((details()===null) && (value() === null)));
     }
 
     function title() {
         const name = label || field;
         if (slant) {
-            return name.replace(slant, '');
+            return name.replace(slant, "");
         }
         return name;
     }
@@ -147,61 +99,101 @@ const N = ({label, field, unit, bold, line, offset, slant, n}) => { // item
         return null;
     }
 
-    function daily() {
-        const percent = field + " (% Daily Value)";
-        if (n[percent] === undefined) {
-            return null;
+    function details(dv="(% Daily Value)", ff="from Fat") {
+        const daily = field + " " + dv;
+        if (n[daily] !== undefined) {
+            return n[daily] + "%";
         }
-        return n[percent] + "%";
-    }
-
-    if ((daily===null) && (value === null)) {
+        const fat = field + " " + ff;
+        if (n[fat] !== undefined) {
+            return fat + " " + n[fat];
+        }
         return null;
     }
 
     function space() { return {marginLeft: offset || "0px"}; }
     function left() { return {float: "left", marginRight: "10px"}; }
-    function center() { return {display: "block", overflow: "auto", position: "relative", top: "-4px"}; }
+    function center() { return {display: "block", overflow: "auto",
+                                position: "relative", top: "-4px"}; }
     function right() { return {float: "right", marginLeft: "10px"}; }
-};
+}
 
-const Nutrition = ({nutrition: n}) => {
-    if (!n) {
-        return null;
-    }
-
+function Note(props) {
     return (
-        <div style={box()}>
-          <L label="Nutrition Facts" size="2.5em" weight="bold"/>
-          <N field="Serving Size" n={n} line="7px"/>
-          <N field="Servings Per Container" n={n} line="7px"/>
-          <L label="Amount Per Serving" size="0.8em" weight="bold"/>
-          <N field="Calories" n={n} bold="900" line="3px"/>
-          <R label="% Daily Value*" size="0.8em" weight="900"/>
-          <N field="Total Fat" unit="g" n={n} bold="900"/>
-          <N field="Saturated Fat" unit="g" n={n} offset="1em"/>
-          <N field="Trans Fat" unit="g" n={n} offset="1em" slant="Trans"/>
-          <N field="Cholesterol" unit="mg" n={n} bold="900"/>
-          <N field="Sodium" unit="mg" n={n} bold="900"/>
-          <N label="Total Carbohydrate"
-             field="Carbohydrates" unit="g" n={n} bold="900"/>
-          <N field="Dietary Fiber" unit="g" n={n} offset="1em"/>
-          <N field="Sugars" unit="g" n={n} offset="1em"/>
-          <N field="Protein" unit="g" n={n} line="7px" bold="900"/>
-          <N field="Vitamin A" unit="g" n={n}/>
-          <N field="Vitamin B" unit="g" n={n}/>
-          <N field="Vitamin C" unit="g" n={n}/>
-          <N field="Vitamin D" unit="g" n={n}/>
-          <N field="Vitamin E" unit="g" n={n}/>
-          <N field="Calcium" unit="g" n={n}/>
-          <N field="Iron" unit="g" n={n}/>
-          {note()}
+        <div>
+          <p style={{lineHeight: "normal", fontSize:"0.6em"}}>
+            * Percent Daily Values are based on a 2,000 calorie diet.
+            Your Daily Values may be higher or lower depending on your calorie needs:
+          </p>
+
+          <table style={table()}>
+            <thead>
+              <tr>{th()}{th("Calories")}{th("2,000")}{th("2,500")}</tr>
+            </thead>
+            <tbody>
+              <tr>{td("Total Fat")}{td("Less Than")}{td("65g")}{td("80g")}</tr>
+              <tr>{td_space("Sat Fat")}{td("Less Than")}{td("20g")}{td("25g")}</tr>
+              <tr>{td("Cholesterol")}{td("Less Than")}{td("300mg")}{td("300mg")}</tr>
+              <tr>{td("Sodium")}{td("Less Than")}{td("2,400mg")}{td("2,400mg")}</tr>
+              <tr>{td("Total Carbohydrate")}{td("")}{td("300g")}{td("375g")}</tr>
+              <tr>{td_space("Dietary Fiber")}{td("")}{td("25g")}{td("30g")}</tr>
+            </tbody>
+          </table>
         </div>
     );
 
+    function th(h) { return (<th style={{borderBottom: "1pt solid black",
+                                         textAlign: "left", fontWeight: "normal"}}>{h}</th>); }
+    function td(h) { return (<td>{h}</td>); }
+    function td_space(h) { return (<td><span style={{marginLeft:"1em"}}> </span> {h}</td>); }
+    function table() { return {
+        lineHeight: "normal", fontWeight:"normal", fontSize:"0.6em",
+        width:"100%", borderCollapse: "collapse"
+    }; }
+}
+
+function Nutrition({nutrition: n}) {
+    if (!n) { return null; }
+
+    return (
+        <div style={font()}>
+          <h1>{n.Item}</h1>
+          <div style={box()}>
+            <Label left="Nutrition Facts" size="2.2em" weight="900" line="hidden" padding="0.2em"/>
+            <Chunk field="Serving Size" n={n} line="7px"/>
+            <Chunk field="Servings Per Container" n={n} line="7px"/>
+            <Label left="Amount Per Serving" size="0.6em" weight="900"/>
+            <Chunk field="Calories" n={n} bold="900" line="3px"/>
+            <Label right="% Daily Value*" size="0.6em" weight="900"/>
+            <Chunk field="Total Fat" unit="g" n={n} bold="900"/>
+            <Chunk field="Saturated Fat" unit="g" n={n} offset="1em"/>
+            <Chunk field="Trans Fat" unit="g" n={n} offset="1em" slant="Trans"/>
+            <Chunk field="Cholesterol" unit="mg" n={n} bold="900"/>
+            <Chunk field="Sodium" unit="mg" n={n} bold="900"/>
+            <Chunk label="Total Carbohydrate"
+                   field="Carbohydrates" unit="g" n={n} bold="900"/>
+            <Chunk field="Dietary Fiber" unit="g" n={n} offset="1em"/>
+            <Chunk field="Sugars" unit="g" n={n} offset="1em"/>
+            <Chunk field="Protein" unit="g" n={n} line="7px" bold="900"/>
+            <Chunk field="Vitamin A" unit="g" n={n}/>
+            <Chunk field="Vitamin B" unit="g" n={n}/>
+            <Chunk field="Vitamin C" unit="g" n={n}/>
+            <Chunk field="Vitamin D" unit="g" n={n}/>
+            <Chunk field="Vitamin E" unit="g" n={n}/>
+            <Chunk field="Calcium" unit="g" n={n}/>
+            <Chunk field="Iron" unit="g" n={n}/>
+            <Chunk field="Potassium" unit="g" n={n}/>
+            <Note/>
+          </div>
+        </div>
+    );
+
+    function font() {
+        return { fontFamily: "Helvetica, Helvetica Nue, Arial, sans-serif" };
+    }
+
     function box() {
         return {
-            fontFamily: "Helvetica Neue", // , Helvetica, Arial, sans-serif",
             lineHeight: "0.4em",
             borderWidth: "1px",
             borderColor: "black",
@@ -210,29 +202,167 @@ const Nutrition = ({nutrition: n}) => {
             paddingTop: "1em"
         };
     }
+}
 
-    function note() {
-        return (
-            <p style={{lineHeight: "normal", fontSize:"0.8em"}}>
-              * Percent Daily Values are based on a 2,000 calorie diet.
-            </p>
-        );
+const DrawerMenuItems = ({items, open, width, onRequestChange}) => {
+    if (!items) { return null; }
+    return (
+        <Drawer open={open} onRequestChange={onRequestChange} width={width}
+                docked={false} zDepth={2} openSecondary={true} docked={true}
+                >
+          <AppBar title="Menu" onLeftIconButtonTouchTap={onRequestChange}/>
+          {items.map((item,index) =>
+              <Route key={item._id} render={({history}) => (
+                  <MenuItem onTouchTap={goto(item, history)} style={style().menu}>
+                    <span style={style().index}>{index + 1 + "."}</span>
+                    {item.Item}
+                  </MenuItem>
+              )}/>)}
+        </Drawer>
+    );
+
+    function style() { return {
+        menu : {
+            color: "#f5f5f5", backgroundColor: "#546e7a"
+        },
+        index : {
+            marginRight: "0.8em"
+        }
+    }; }
+
+    function goto(item, history) {
+        return () => {
+            // onRequestChange();
+            history.push('/'+item._id);
+        };
     }
 };
 
+function ConnectedDrawer(props) {
+    const BindedDrawer = connect(states(props), dispatches)(DrawerMenuItems);
+    return (<BindedDrawer/>);
+
+    function states(props) {
+        return (state) => ({
+            ...props, // TBD
+            items: state.menu.items
+        });
+    }
+
+    function dispatches(dispatch) { return {
+        // onRequestChange : () => {dispatch(Menu.action.toggle_drawer());}
+    }; }
+
+}
+
+function ConnectedNutrition(props) {
+    const BindedNutrition = connect(states(props), dispatches)(Nutrition);
+    return (<BindedNutrition/>);
+
+    function states(props) {
+        const _id = props.match.params._id || props._id || 0;
+        console.log({props, _id});
+        return (state) => ({
+            nutrition: (_id == 0)
+                ? state.menu.items[0]
+                : state.menu.items.filter(i => i._id === _id)[0]
+        });
+    }
+
+    function dispatches(dispatch) { return {
+        hello : (msg="hello there") => { dispatch({type: "", payload: msg});}
+    }; }
+}
+
+class Top extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            drawer_width : "50%",
+            drawer_shown : true
+        };
+        this.toggle_drawer = this.toggle_drawer.bind(this);
+        this.style = this.style.bind(this);
+        this.render = this.render.bind(this);
+    }
+
+    toggle_drawer(){
+        this.setState({
+            drawer_shown : !this.state.drawer_shown
+        });
+    }
+
+    style() {
+        return {
+            drawer_content : {
+                position: "fixed",
+                left: "0px",
+                right: (this.state.drawer_shown) ? this.state.drawer_width : "0px"
+            },
+            drawer_button : {
+                float : "right"
+            },
+            card : {
+                boxShadow: "none"
+            }
+        };
+    }
+
+    render() {
+        return (
+            <div>
+              <ConnectedDrawer open={this.state.drawer_shown}
+                               width={this.state.drawer_width}
+                               onRequestChange={this.toggle_drawer}/>
+              <div style={this.style().drawer_content}>
+                <Card expanded={true} initiallyExpanded={true} style={this.style().card}>
+                  <CardActions>
+                    <FloatingActionButton label="Menu" onTouchTap={this.toggle_drawer}
+                                          style={this.style().drawer_button}>
+                      <NavigationMenu style={{color: "white"}}/>
+                    </FloatingActionButton>
+                  </CardActions>
+                  <CardText expandable={true}>
+                    {/* content */}
+                    {this.props.children}
+                  </CardText>
+                </Card>
+              </div>
+            </div>
+        );
+    }
+}
+
 function app() {
-    const app = (
-        <MuiThemeProvider muiTheme={get_theme()}>
-          <Nutrition nutrition={item1}/>
-        </MuiThemeProvider>
+    const spa = (
+        <Provider store={storage()}>
+          <MuiThemeProvider muiTheme={get_theme()}>
+            <BrowserRouter>
+              <Top>
+                <Switch>
+                  <Route exact path="/" component={ConnectedNutrition}/>
+                  <Route path="/:_id" component={ConnectedNutrition}/>
+                </Switch>
+              </Top>
+            </BrowserRouter>
+          </MuiThemeProvider>
+        </Provider>
     );
-    ReactDom.render(app, root());
-    injectTapEventPlugin(); // material-ui
-    return;
+    injectTapEventPlugin(); // NOTE: for material-ui, before ReactDom.render
+    ReactDom.render(spa, root());
+    return null;
+
+    function storage() {
+        const data = new Data();
+        window.data = data;
+        window.store = data.store;
+        return data.store;
+    }
 
     function root() {
         const div = document.createElement("div");
         document.body.append(div);
+        document.body.style.margin = "0px";
         return div;
     }
 
@@ -241,7 +371,7 @@ function app() {
             avatar: {
                 borderColor: null
             },
-            userAgent: 'all'
+            userAgent: "all"
         };
 
         const theme = getMuiTheme({
@@ -254,5 +384,3 @@ function app() {
         return theme;
     }
 }
-
-$(document).ready(app);
