@@ -150,7 +150,7 @@ class App {
         app.use(this.log());
         app.use(body_parser.json());
         app.use(body_parser.urlencoded({ extended: true }));
-        app.use(express.static(path.resolve(__dirname)));
+        app.use(express.static(path.resolve(__dirname), { maxage: '24h'}));
     };
 
     run = async () => { try {
