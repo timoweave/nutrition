@@ -16,7 +16,8 @@ const Menu = {
         // drawer: false, // open drawer
         loading : 0, // loading count
         error: false, // loading error
-        items : [] // mcdonalds menu items
+        views : {}, // mcdonalds menu items (hash)
+        items : [] // mcdonalds menu items (array)
     },
 
     GET_MENU : "GET_MENU",
@@ -30,7 +31,8 @@ const Menu = {
             case REJECT(Menu.GET_MENU):
                 return {...menu, loading : menu.loading - 1, error: payload};
             case RESOLVE(Menu.GET_MENU):
-                return {...menu, loading: menu.loading - 1, error: false, items: [...menu.items, ...payload]};
+                return {...menu, loading: menu.loading - 1, error: false, items: [...menu.items, ...payload],
+                        views: {...menu.views, ...payload.reduce((r, i) => {r[i._id] = i; return r; }, {})} };
             // case Menu.TOGGLE_DRAWER:
                 // return {...menu, drawer : !menu.drawer};
             default:

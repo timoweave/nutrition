@@ -253,12 +253,9 @@ export function ConnectedNutrition(props) {
     return (<BindedNutrition/>);
 
     function states(props) {
-        const _id = props.match.params._id || props._id || 0;
-        console.log({props, _id});
+        const _id = props.match.params._id || props._id;
         return (state) => ({
-            nutrition: (_id == 0)
-                ? state.menu.items[0]
-                : state.menu.items.filter(i => i._id === _id)[0]
+            nutrition: state.menu.views[_id]
         });
     }
 
@@ -317,6 +314,7 @@ export class Top extends Component {
                 right: (this.state.drawer_shown) ? this.state.drawer_width : "0px"
             },
             drawer_button : {
+                marginTop: "-4px",
                 float : "right"
             },
             card : {
