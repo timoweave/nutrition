@@ -1,3 +1,5 @@
 node_modules/
+icons-*/
 host.js
+index.*
 *~

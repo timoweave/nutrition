@@ -94,7 +94,7 @@ function request_one_menu(id) {
 }
 
 function request_few_menu() {
-    const url = '/mcdonalds?limit=300&select=*';
+    const url = '/mcdonalds?limit=*&select=*';
     return axios.get(url).then((response)=> {
         return response.data.rows;
     }).catch((err) => {

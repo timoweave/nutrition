@@ -6,7 +6,8 @@
   "keywords": [],
   "author": "Timothy Shiu <timoweave@gmail.com>",
   "license": "ISC",
-  "dependencies": {},
+  "dependencies": {
+  },
   "devDependencies": {
     "axios": "^0.16.2",
     "babel-cli": "^6.24.1",
@@ -79,6 +80,7 @@
   },
   "scripts": {
     "curl_download": "echo 'NOTE: use your login/password to curl'; echo 'curl -O https://www.kaggle.com/mcdonalds/nutrition-facts/downloads/menu.csv'; echo '';",
+    "mongo_shell": "mongo localhost:27017/nutrition",
     "mongo_import": "mongoimport --host localhost:27017 --db nutrition --type csv --headerline --file mcdonalds.csv",
     "host_babel": "babel server.js -w -o host.js",
     "host_watch": "nodemon host.js --verbose -i server.js -i database.js -i store.js -i client.jsx -i index.js -i index.js.map -i index.html -i index.css",

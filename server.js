@@ -85,7 +85,7 @@ class App {
                                default_sort=["Total Fat", "Trans Fat"]) {
             const query = Object.assign({}, req.query);
             const skip = parseInt(query.skip) || default_skip;
-            const limit = parseInt(query.limit) || default_limit;
+            const limit = parseInt(query.limit) || (!isNaN(parseInt(query.limit))) ? default_limit : NaN;
             const select_keys = (query.select
                             ? (Array.isArray(query.select) ? query.select : [query.select])
                             : default_select);
