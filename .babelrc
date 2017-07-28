@@ -1,0 +1,19 @@
+{
+  "presets": [
+    "env", "react", "stage-2", "es2017"
+  ],
+  "plugins": [
+    "react-html-attrs",
+    "transform-react-jsx",
+    "syntax-async-functions",
+    "transform-runtime",
+    "transform-imports",
+    "transform-regenerator",
+    "transform-async-to-generator",
+    "transform-decorators-legacy",
+    "transform-decorators",
+    ["transform-class-properties", {"spec": false}],
+    "transform-es2015-classes",
+    "transform-es2015-template-literals"
+  ]
+}
