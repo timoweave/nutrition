@@ -11,6 +11,14 @@ import Drawer from "material-ui/Drawer";
 import Snackbar from 'material-ui/Snackbar';
 import MenuItem from 'material-ui/MenuItem';
 import NavigationMenu from 'material-ui/svg-icons/navigation/menu';
+import ActionDelete from 'material-ui/svg-icons/action/delete';
+import ContentAdd from 'material-ui/svg-icons/content/add';
+import ContentRemove from 'material-ui/svg-icons/content/remove';
+import NavigationClose from 'material-ui/svg-icons/navigation/close';
+import EditorModeEdit from "material-ui/svg-icons/editor/mode-edit";
+import SearchBar from 'material-ui-search-bar';
+import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
+
 
 import {Card, CardActions, CardText} from "material-ui/Card";
 import FloatingActionButton from 'material-ui/FloatingActionButton';
@@ -18,6 +26,7 @@ import getMuiTheme from "material-ui/styles/getMuiTheme";
 import MuiThemeProvider from "material-ui/styles/MuiThemeProvider";
 import {deepOrange100, deepOrange500, deepOrange700} from "material-ui/styles/colors";
 import injectTapEventPlugin from "react-tap-event-plugin";
+import SearchInput from "react-search-input";
 
 import {Data, Menu} from "./store.js";
 
@@ -198,20 +207,37 @@ export function Nutrition({nutrition: n}) {
     }
 }
 
-export function DrawerMenuItems({items, open, width, onRequestChange}) {
-    if (!items) { return null; }
+export function DrawerMenuItems({menu, open, width, onRequestChange}) {
+    if (!menu) { return null; }
     return (
         <Drawer open={open} onRequestChange={onRequestChange} width={width}
-                docked={false} zDepth={2} openSecondary={true} docked={true}
-                >
+                docked={false} zDepth={2} openSecondary={true} docked={true}>
           <AppBar title="Menu" onLeftIconButtonTouchTap={onRequestChange}/>
-          {items.map((item,index) =>
+          <SearchInput style={{width:"100%", fontSize:"1em"}}/>
+          {/*
+          <Toolbar>
+            <ToolbarGroup firstChild={true}>
+              <SearchBar
+                style={{width:"100%", marginRight:"-24px"}}
+                onChange={() => console.log('onChange')}
+                onRequestSearch={() => console.log('onRequestSearch')}/>
+            </ToolbarGroup>
+          </Toolbar>
+          */}
+          {menu.items.map((item,index) =>
               <Route key={item._id} render={({history}) => (
                   <MenuItem onTouchTap={goto(item, history)} style={style().menu}>
                     <span style={style().index}>{index + 1 + "."}</span>
                     {item.Item}
                   </MenuItem>
               )}/>)}
+        {/*
+            <Snackbar open={this.state.open} message="Event added to your calendar"
+                      onRequestClose={this.handleRequestClose}
+                      autoHideDuration={4000}
+            />
+         */}
+
         </Drawer>
     );
 
@@ -238,7 +264,7 @@ export function ConnectedDrawerMenuItems(props) {
     function states(props) {
         return (state) => ({
             ...props, // TBD
-            items: state.menu.items
+            menu: state.menu
         });
     }
 
@@ -276,7 +302,17 @@ export class Top extends Component {
                   <CardActions>
                     <FloatingActionButton label="Menu" onTouchTap={this.toggle_drawer}
                                           style={this.style().drawer_button}>
-                      <NavigationMenu style={{color: "white"}}/>
+                      <NavigationClose style={{color: "white"}}/>
+                    </FloatingActionButton>
+
+                    <FloatingActionButton label="Menu" onTouchTap={this.toggle_drawer}
+                                          style={this.style().drawer_button}>
+                      <ContentAdd style={{color: "white"}}/>
+                    </FloatingActionButton>
+
+                    <FloatingActionButton label="Menu" onTouchTap={this.toggle_drawer}
+                                          style={this.style().drawer_button}>
+                      <EditorModeEdit style={{color: "white"}}/>
                     </FloatingActionButton>
                   </CardActions>
                   <CardText expandable={true}>
