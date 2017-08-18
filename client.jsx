@@ -49,7 +49,7 @@ export function Label({left, right, size, line="visible", padding="", weight="no
     function rhs() { return {fontSize: size, fontWeight: weight, float: "right", marginLeft: "0.5em"}; }
 }
 
-export function Chunk({label, field, unit, bold, line, offset, slant, n}) {
+export function Facts({label, field, unit, bold, line, offset, slant, n}) {
     if (bad()) { return null; }
 
     return (
@@ -163,29 +163,29 @@ export function Nutrition({nutrition: n}) {
           <h1>{n.Item}</h1>
           <div style={box()}>
             <Label left="Nutrition Facts" size="2.2em" weight="900" line="hidden" padding="0.2em"/>
-            <Chunk field="Serving Size" n={n} line="7px"/>
-            <Chunk field="Servings Per Container" n={n} line="7px"/>
+            <Facts field="Serving Size" n={n} line="7px"/>
+            <Facts field="Servings Per Container" n={n} line="7px"/>
             <Label left="Amount Per Serving" size="0.6em" weight="900"/>
-            <Chunk field="Calories" n={n} bold="900" line="3px"/>
+            <Facts field="Calories" n={n} bold="900" line="3px"/>
             <Label right="% Daily Value*" size="0.6em" weight="900"/>
-            <Chunk field="Total Fat" unit="g" n={n} bold="900"/>
-            <Chunk field="Saturated Fat" unit="g" n={n} offset="1em"/>
-            <Chunk field="Trans Fat" unit="g" n={n} offset="1em" slant="Trans"/>
-            <Chunk field="Cholesterol" unit="mg" n={n} bold="900"/>
-            <Chunk field="Sodium" unit="mg" n={n} bold="900"/>
-            <Chunk label="Total Carbohydrate"
+            <Facts field="Total Fat" unit="g" n={n} bold="900"/>
+            <Facts field="Saturated Fat" unit="g" n={n} offset="1em"/>
+            <Facts field="Trans Fat" unit="g" n={n} offset="1em" slant="Trans"/>
+            <Facts field="Cholesterol" unit="mg" n={n} bold="900"/>
+            <Facts field="Sodium" unit="mg" n={n} bold="900"/>
+            <Facts label="Total Carbohydrate"
                    field="Carbohydrates" unit="g" n={n} bold="900"/>
-            <Chunk field="Dietary Fiber" unit="g" n={n} offset="1em"/>
-            <Chunk field="Sugars" unit="g" n={n} offset="1em"/>
-            <Chunk field="Protein" unit="g" n={n} line="7px" bold="900"/>
-            <Chunk field="Vitamin A" unit="g" n={n}/>
-            <Chunk field="Vitamin B" unit="g" n={n}/>
-            <Chunk field="Vitamin C" unit="g" n={n}/>
-            <Chunk field="Vitamin D" unit="g" n={n}/>
-            <Chunk field="Vitamin E" unit="g" n={n}/>
-            <Chunk field="Calcium" unit="g" n={n}/>
-            <Chunk field="Iron" unit="g" n={n}/>
-            <Chunk field="Potassium" unit="g" n={n}/>
+            <Facts field="Dietary Fiber" unit="g" n={n} offset="1em"/>
+            <Facts field="Sugars" unit="g" n={n} offset="1em"/>
+            <Facts field="Protein" unit="g" n={n} line="7px" bold="900"/>
+            <Facts field="Vitamin A" unit="g" n={n}/>
+            <Facts field="Vitamin B" unit="g" n={n}/>
+            <Facts field="Vitamin C" unit="g" n={n}/>
+            <Facts field="Vitamin D" unit="g" n={n}/>
+            <Facts field="Vitamin E" unit="g" n={n}/>
+            <Facts field="Calcium" unit="g" n={n}/>
+            <Facts field="Iron" unit="g" n={n}/>
+            <Facts field="Potassium" unit="g" n={n}/>
             <Note/>
           </div>
         </div>
@@ -213,7 +213,10 @@ export function DrawerMenuItems({menu, open, width, onRequestChange}) {
         <Drawer open={open} onRequestChange={onRequestChange} width={width}
                 docked={false} zDepth={2} openSecondary={true} docked={true}>
           <AppBar title="Menu" onLeftIconButtonTouchTap={onRequestChange}/>
-          <SearchInput style={{width:"100%", fontSize:"1em"}}/>
+          <MenuItem style={style().search}>
+            <input placeholder="hello there"/>
+            {/* <SearchInput style={{width:"100%", fontSize:"1em"}}/> */}
+          </MenuItem>
           {/*
           <Toolbar>
             <ToolbarGroup firstChild={true}>
@@ -242,6 +245,10 @@ export function DrawerMenuItems({menu, open, width, onRequestChange}) {
     );
 
     function style() { return {
+        search: {
+            margin:"0",
+            padding: "0"
+        },
         menu : {
             // color: "white", backgroundColor: "#b0bec5"
         },
@@ -279,10 +286,16 @@ export function ConnectedNutrition(props) {
     return (<BindedNutrition/>);
 
     function states(props) {
-        const _id = props.match.params._id || props._id;
-        return (state) => ({
-            nutrition: state.menu.views[_id]
-        });
+        return (state) => {
+            const _id = props.match.params._id || props._id;
+            let data = state.menu.views[_id];
+            if (!data) {
+                data = state.menu.items[0];
+            }
+            return {
+                nutrition: data
+            };
+        };
     }
 
     function dispatches(dispatch) { return {
