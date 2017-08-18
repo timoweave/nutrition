@@ -11,6 +11,14 @@ import Drawer from "material-ui/Drawer";
 import Snackbar from 'material-ui/Snackbar';
 import MenuItem from 'material-ui/MenuItem';
 import NavigationMenu from 'material-ui/svg-icons/navigation/menu';
+import ActionDelete from 'material-ui/svg-icons/action/delete';
+import ContentAdd from 'material-ui/svg-icons/content/add';
+import ContentRemove from 'material-ui/svg-icons/content/remove';
+import NavigationClose from 'material-ui/svg-icons/navigation/close';
+import EditorModeEdit from "material-ui/svg-icons/editor/mode-edit";
+import SearchBar from 'material-ui-search-bar';
+import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
+
 
 import {Card, CardActions, CardText} from "material-ui/Card";
 import FloatingActionButton from 'material-ui/FloatingActionButton';
@@ -18,12 +26,13 @@ import getMuiTheme from "material-ui/styles/getMuiTheme";
 import MuiThemeProvider from "material-ui/styles/MuiThemeProvider";
 import {deepOrange100, deepOrange500, deepOrange700} from "material-ui/styles/colors";
 import injectTapEventPlugin from "react-tap-event-plugin";
+import SearchInput from "react-search-input";
 
 import {Data, Menu} from "./store.js";
 
 $(document).ready(app);
 
-function Label({left, right, size, line="visible", padding="", weight="normal"}) {
+export function Label({left, right, size, line="visible", padding="", weight="normal"}) {
     return (
         <div>
           <div>
@@ -40,19 +49,7 @@ function Label({left, right, size, line="visible", padding="", weight="normal"})
     function rhs() { return {fontSize: size, fontWeight: weight, float: "right", marginLeft: "0.5em"}; }
 }
 
-function Bar({size}) {
-    return (
-        <hr style={styles()}/>
-    );
-
-    function styles() {
-        return (size
-                ? {borderStyle: "solid", borderWidth: size}
-                : {});
-    }
-}
-
-function Chunk({label, field, unit, bold, line, offset, slant, n}) {
+export function Facts({label, field, unit, bold, line, offset, slant, n}) {
     if (bad()) { return null; }
 
     return (
@@ -67,9 +64,15 @@ function Chunk({label, field, unit, bold, line, offset, slant, n}) {
             <span style={right()}>{details()}</span>
             <span style={center()}>&nbsp;</span>
           </div>
-          <Bar size={line}/>
+          <hr style={styles(line)}/>
         </div>
     );
+
+    function styles(line) {
+        return (line
+                ? {borderStyle: "solid", borderWidth: line}
+                : {});
+    }
 
     function bad() {
         return ((!n) ||
@@ -118,7 +121,7 @@ function Chunk({label, field, unit, bold, line, offset, slant, n}) {
     function right() { return {float: "right", marginLeft: "10px"}; }
 }
 
-function Note(props) {
+export function Note(props) {
     return (
         <div>
           <p style={{lineHeight: "normal", fontSize:"0.6em"}}>
@@ -152,7 +155,7 @@ function Note(props) {
     }; }
 }
 
-function Nutrition({nutrition: n}) {
+export function Nutrition({nutrition: n}) {
     if (!n) { return null; }
 
     return (
@@ -160,29 +163,29 @@ function Nutrition({nutrition: n}) {
           <h1>{n.Item}</h1>
           <div style={box()}>
             <Label left="Nutrition Facts" size="2.2em" weight="900" line="hidden" padding="0.2em"/>
-            <Chunk field="Serving Size" n={n} line="7px"/>
-            <Chunk field="Servings Per Container" n={n} line="7px"/>
+            <Facts field="Serving Size" n={n} line="7px"/>
+            <Facts field="Servings Per Container" n={n} line="7px"/>
             <Label left="Amount Per Serving" size="0.6em" weight="900"/>
-            <Chunk field="Calories" n={n} bold="900" line="3px"/>
+            <Facts field="Calories" n={n} bold="900" line="3px"/>
             <Label right="% Daily Value*" size="0.6em" weight="900"/>
-            <Chunk field="Total Fat" unit="g" n={n} bold="900"/>
-            <Chunk field="Saturated Fat" unit="g" n={n} offset="1em"/>
-            <Chunk field="Trans Fat" unit="g" n={n} offset="1em" slant="Trans"/>
-            <Chunk field="Cholesterol" unit="mg" n={n} bold="900"/>
-            <Chunk field="Sodium" unit="mg" n={n} bold="900"/>
-            <Chunk label="Total Carbohydrate"
+            <Facts field="Total Fat" unit="g" n={n} bold="900"/>
+            <Facts field="Saturated Fat" unit="g" n={n} offset="1em"/>
+            <Facts field="Trans Fat" unit="g" n={n} offset="1em" slant="Trans"/>
+            <Facts field="Cholesterol" unit="mg" n={n} bold="900"/>
+            <Facts field="Sodium" unit="mg" n={n} bold="900"/>
+            <Facts label="Total Carbohydrate"
                    field="Carbohydrates" unit="g" n={n} bold="900"/>
-            <Chunk field="Dietary Fiber" unit="g" n={n} offset="1em"/>
-            <Chunk field="Sugars" unit="g" n={n} offset="1em"/>
-            <Chunk field="Protein" unit="g" n={n} line="7px" bold="900"/>
-            <Chunk field="Vitamin A" unit="g" n={n}/>
-            <Chunk field="Vitamin B" unit="g" n={n}/>
-            <Chunk field="Vitamin C" unit="g" n={n}/>
-            <Chunk field="Vitamin D" unit="g" n={n}/>
-            <Chunk field="Vitamin E" unit="g" n={n}/>
-            <Chunk field="Calcium" unit="g" n={n}/>
-            <Chunk field="Iron" unit="g" n={n}/>
-            <Chunk field="Potassium" unit="g" n={n}/>
+            <Facts field="Dietary Fiber" unit="g" n={n} offset="1em"/>
+            <Facts field="Sugars" unit="g" n={n} offset="1em"/>
+            <Facts field="Protein" unit="g" n={n} line="7px" bold="900"/>
+            <Facts field="Vitamin A" unit="g" n={n}/>
+            <Facts field="Vitamin B" unit="g" n={n}/>
+            <Facts field="Vitamin C" unit="g" n={n}/>
+            <Facts field="Vitamin D" unit="g" n={n}/>
+            <Facts field="Vitamin E" unit="g" n={n}/>
+            <Facts field="Calcium" unit="g" n={n}/>
+            <Facts field="Iron" unit="g" n={n}/>
+            <Facts field="Potassium" unit="g" n={n}/>
             <Note/>
           </div>
         </div>
@@ -204,26 +207,50 @@ function Nutrition({nutrition: n}) {
     }
 }
 
-const DrawerMenuItems = ({items, open, width, onRequestChange}) => {
-    if (!items) { return null; }
+export function DrawerMenuItems({menu, open, width, onRequestChange}) {
+    if (!menu) { return null; }
     return (
         <Drawer open={open} onRequestChange={onRequestChange} width={width}
-                docked={false} zDepth={2} openSecondary={true} docked={true}
-                >
+                docked={false} zDepth={2} openSecondary={true} docked={true}>
           <AppBar title="Menu" onLeftIconButtonTouchTap={onRequestChange}/>
-          {items.map((item,index) =>
+          <MenuItem style={style().search}>
+            <input placeholder="hello there"/>
+            {/* <SearchInput style={{width:"100%", fontSize:"1em"}}/> */}
+          </MenuItem>
+          {/*
+          <Toolbar>
+            <ToolbarGroup firstChild={true}>
+              <SearchBar
+                style={{width:"100%", marginRight:"-24px"}}
+                onChange={() => console.log('onChange')}
+                onRequestSearch={() => console.log('onRequestSearch')}/>
+            </ToolbarGroup>
+          </Toolbar>
+          */}
+          {menu.items.map((item,index) =>
               <Route key={item._id} render={({history}) => (
                   <MenuItem onTouchTap={goto(item, history)} style={style().menu}>
                     <span style={style().index}>{index + 1 + "."}</span>
                     {item.Item}
                   </MenuItem>
               )}/>)}
+        {/*
+            <Snackbar open={this.state.open} message="Event added to your calendar"
+                      onRequestClose={this.handleRequestClose}
+                      autoHideDuration={4000}
+            />
+         */}
+
         </Drawer>
     );
 
     function style() { return {
+        search: {
+            margin:"0",
+            padding: "0"
+        },
         menu : {
-            color: "#f5f5f5", backgroundColor: "#546e7a"
+            // color: "white", backgroundColor: "#b0bec5"
         },
         index : {
             marginRight: "0.8em"
@@ -232,20 +259,19 @@ const DrawerMenuItems = ({items, open, width, onRequestChange}) => {
 
     function goto(item, history) {
         return () => {
-            // onRequestChange();
             history.push('/'+item._id);
         };
     }
 };
 
-function ConnectedDrawer(props) {
+export function ConnectedDrawerMenuItems(props) {
     const BindedDrawer = connect(states(props), dispatches)(DrawerMenuItems);
     return (<BindedDrawer/>);
 
     function states(props) {
         return (state) => ({
             ...props, // TBD
-            items: state.menu.items
+            menu: state.menu
         });
     }
 
@@ -255,18 +281,21 @@ function ConnectedDrawer(props) {
 
 }
 
-function ConnectedNutrition(props) {
+export function ConnectedNutrition(props) {
     const BindedNutrition = connect(states(props), dispatches)(Nutrition);
     return (<BindedNutrition/>);
 
     function states(props) {
-        const _id = props.match.params._id || props._id || 0;
-        console.log({props, _id});
-        return (state) => ({
-            nutrition: (_id == 0)
-                ? state.menu.items[0]
-                : state.menu.items.filter(i => i._id === _id)[0]
-        });
+        return (state) => {
+            const _id = props.match.params._id || props._id;
+            let data = state.menu.views[_id];
+            if (!data) {
+                data = state.menu.items[0];
+            }
+            return {
+                nutrition: data
+            };
+        };
     }
 
     function dispatches(dispatch) { return {
@@ -274,7 +303,41 @@ function ConnectedNutrition(props) {
     }; }
 }
 
-class Top extends Component {
+export class Top extends Component {
+    render() {
+        return (
+            <div>
+              <ConnectedDrawerMenuItems open={this.state.drawer_shown}
+                                        width={this.state.drawer_width}
+                                        onRequestChange={this.toggle_drawer}/>
+              <div style={this.style().drawer_content}>
+                <Card expanded={true} initiallyExpanded={true} style={this.style().card}>
+                  <CardActions>
+                    <FloatingActionButton label="Menu" onTouchTap={this.toggle_drawer}
+                                          style={this.style().drawer_button}>
+                      <NavigationClose style={{color: "white"}}/>
+                    </FloatingActionButton>
+
+                    <FloatingActionButton label="Menu" onTouchTap={this.toggle_drawer}
+                                          style={this.style().drawer_button}>
+                      <ContentAdd style={{color: "white"}}/>
+                    </FloatingActionButton>
+
+                    <FloatingActionButton label="Menu" onTouchTap={this.toggle_drawer}
+                                          style={this.style().drawer_button}>
+                      <EditorModeEdit style={{color: "white"}}/>
+                    </FloatingActionButton>
+                  </CardActions>
+                  <CardText expandable={true}>
+                    {/* content */}
+                    {this.props.children}
+                  </CardText>
+                </Card>
+              </div>
+            </div>
+        );
+    }
+
     constructor(props) {
         super(props);
         this.state = {
@@ -300,6 +363,7 @@ class Top extends Component {
                 right: (this.state.drawer_shown) ? this.state.drawer_width : "0px"
             },
             drawer_button : {
+                marginTop: "-4px",
                 float : "right"
             },
             card : {
@@ -307,34 +371,10 @@ class Top extends Component {
             }
         };
     }
-
-    render() {
-        return (
-            <div>
-              <ConnectedDrawer open={this.state.drawer_shown}
-                               width={this.state.drawer_width}
-                               onRequestChange={this.toggle_drawer}/>
-              <div style={this.style().drawer_content}>
-                <Card expanded={true} initiallyExpanded={true} style={this.style().card}>
-                  <CardActions>
-                    <FloatingActionButton label="Menu" onTouchTap={this.toggle_drawer}
-                                          style={this.style().drawer_button}>
-                      <NavigationMenu style={{color: "white"}}/>
-                    </FloatingActionButton>
-                  </CardActions>
-                  <CardText expandable={true}>
-                    {/* content */}
-                    {this.props.children}
-                  </CardText>
-                </Card>
-              </div>
-            </div>
-        );
-    }
 }
 
-function app() {
-    const spa = (
+export function SPA() {
+    return (
         <Provider store={storage()}>
           <MuiThemeProvider muiTheme={get_theme()}>
             <BrowserRouter>
@@ -348,22 +388,12 @@ function app() {
           </MuiThemeProvider>
         </Provider>
     );
-    injectTapEventPlugin(); // NOTE: for material-ui, before ReactDom.render
-    ReactDom.render(spa, root());
-    return null;
 
     function storage() {
         const data = new Data();
         window.data = data;
         window.store = data.store;
         return data.store;
-    }
-
-    function root() {
-        const div = document.createElement("div");
-        document.body.append(div);
-        document.body.style.margin = "0px";
-        return div;
     }
 
     function get_theme() {
@@ -383,4 +413,18 @@ function app() {
         }, theme_opt);
         return theme;
     }
+}
+
+export default function app() {
+    injectTapEventPlugin(); // NOTE: for material-ui, before ReactDom.render
+    ReactDom.render(<SPA/>, root());
+    return null;
+
+    function root() {
+        const div = document.createElement("div");
+        document.body.append(div);
+        document.body.style.margin = "0px";
+        return div;
+    }
+
 }

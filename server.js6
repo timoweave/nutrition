@@ -46,7 +46,7 @@ class App {
         async function find_one_mcdonalds(req, res) { try {
             req.log.print({_id: req.params.id});
             const query = {_id: req.params.id};
-            const {filter} = extract_query(req);
+            const {filter} = get_mcdonalds_args(req);
             const model = database.models.McDonalds;
             req.log.print({model: model.modelName, query, filter});
             const result = await model.findOne(query, filter);
@@ -56,7 +56,7 @@ class App {
         } }
 
         async function find_few_mcdonalds(req, res) { try {
-            const {query, skip, limit, filter} = extract_query(req);
+            const {query, skip, limit, filter} = get_mcdonalds_args(req);
             const model = database.models.McDonalds;
             req.log.print({model: model.modelName, query, skip, limit});
             const results = await model.find(query, filter).skip(skip).limit(limit);
@@ -80,12 +80,13 @@ class App {
             not_allowed(req, res);
         }
 
-        function extract_query(req, default_skip=0, default_limit=5,
-                               default_select=["Item", "Total Fat", "Trans Fat"],
-                               default_sort=["Total Fat", "Trans Fat"]) {
+        function get_mcdonalds_args(req, default_skip=0, default_limit=5,
+                                    default_select=["Item", "Total Fat", "Trans Fat"],
+                                    default_sort=["Total Fat", "Trans Fat"]) {
             const query = Object.assign({}, req.query);
             const skip = parseInt(query.skip) || default_skip;
-            const limit = parseInt(query.limit) || default_limit;
+            const limit = parseInt(query.limit) || ((!isNaN(parseInt(query.limit))) ? default_limit : NaN);
+            req.log.print({query, skip, limit, x : query.limit});
             const select_keys = (query.select
                             ? (Array.isArray(query.select) ? query.select : [query.select])
                             : default_select);
@@ -131,8 +132,8 @@ class App {
                 const obj = args.reduce((ans, arg) => {
                     ans = Object.assign({}, ans, arg);
                     return ans;
-                }, {rid: req.log.rid});
-                console.log(obj);
+                }, {request: req.log.rid});
+                console.log(JSON.stringify(obj, null, 4));
             };
         }
     }
@@ -150,19 +151,21 @@ class App {
         app.use(this.log());
         app.use(body_parser.json());
         app.use(body_parser.urlencoded({ extended: true }));
-        app.use(express.static(path.resolve(__dirname)));
+        app.use(express.static(path.resolve(__dirname), { maxage: '24h'}));
     };
 
     run = async () => { try {
         const setup = {
             port: this.port,
             mongo: this.mongo,
-            dir: __dirname,
+            dir: path.resolve(__dirname),
             time : this.now()
         };
-        console.log(setup);
+        console.log({setup});
         await mongoose.connect(this.mongo, {useMongoClient: true});
+        console.log({status: { message: "mongoose connected"}});
         await this.app.listen(this.port);
+        console.log({status: { message:"node listening"}});
         return this;
     } catch (e) {
         throw e;
@@ -170,10 +173,10 @@ class App {
 
     static parse(argv) {
         const dash = commander;
-        dash.option("-p, --port <port>", "port number", /[3-9][0-9][0-9][0-9]/,
-                    "8080");
-        dash.option("-m, --mongo <mongo>", "mongo address", /mongodb:\/\/\S+:\d+\/\S+/,
-                    "mongodb://localhost:27017/nutrition");
+        dash.option("-p, --port <port>", "port number",
+                    /[3-9][0-9][0-9][0-9]/, "8080");
+        dash.option("-m, --mongo <mongo>", "mongo address",
+                    /mongodb:\/\/\S+:\d+\/\S+/, "mongodb://localhost:27017/nutrition");
         if (argv) {
             dash.parse(argv);
         }
@@ -181,17 +184,15 @@ class App {
             port: dash.port,
             mongo : dash.mongo
         };
-        console.log({option});
         return option;
     }
 }
 
 async function run(argv) { try {
-    console.log("booting...");
     const {port, mongo} = App.parse(argv);
     const app = new App(port, mongo);
     await app.run();
-    console.log("running...");
+    console.log({status: {message: "running..."}});
     return app;
 } catch(e) {
     throw e;

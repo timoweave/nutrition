@@ -66,7 +66,7 @@ where Category must be one of the following:
 ## Task 2: create node/express/mongo server
 
 1. start up your mongo server (docker run mongo for example)
-1. 'npm run build_host' to build host.js from server.js with babel (1st time)
+1. 'npm run build_host' to build host.js from server.js6 with babel (1st time)
 1. 'npm run watch_host' to run host.js node/express/mongo
 1. 'curl GET http://localhost:8080/mcdonalds'  
    curl -X GET 'localhost:8080/mcdonalds?Total+Fat=1'
