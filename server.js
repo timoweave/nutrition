@@ -46,7 +46,7 @@ class App {
         async function find_one_mcdonalds(req, res) { try {
             req.log.print({_id: req.params.id});
             const query = {_id: req.params.id};
-            const {filter} = extract_query(req);
+            const {filter} = get_mcdonalds_args(req);
             const model = database.models.McDonalds;
             req.log.print({model: model.modelName, query, filter});
             const result = await model.findOne(query, filter);
@@ -56,7 +56,7 @@ class App {
         } }
 
         async function find_few_mcdonalds(req, res) { try {
-            const {query, skip, limit, filter} = extract_query(req);
+            const {query, skip, limit, filter} = get_mcdonalds_args(req);
             const model = database.models.McDonalds;
             req.log.print({model: model.modelName, query, skip, limit});
             const results = await model.find(query, filter).skip(skip).limit(limit);
@@ -80,9 +80,9 @@ class App {
             not_allowed(req, res);
         }
 
-        function extract_query(req, default_skip=0, default_limit=5,
-                               default_select=["Item", "Total Fat", "Trans Fat"],
-                               default_sort=["Total Fat", "Trans Fat"]) {
+        function get_mcdonalds_args(req, default_skip=0, default_limit=5,
+                                    default_select=["Item", "Total Fat", "Trans Fat"],
+                                    default_sort=["Total Fat", "Trans Fat"]) {
             const query = Object.assign({}, req.query);
             const skip = parseInt(query.skip) || default_skip;
             const limit = parseInt(query.limit) || ((!isNaN(parseInt(query.limit))) ? default_limit : NaN);
