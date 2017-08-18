@@ -105,4 +105,62 @@ const config = {
     ]
 };
 
+function watch_it_happen(config) {
+
+    let stats_hash = null;
+    const output_options = {
+        context: path.resolve(__dirname),
+        colors: { level: 2, hasBasic: true, has256: true, has16m: false },
+        cached: false,
+        cachedAssets: false,
+        exclude: [ 'node_modules', 'bower_components', 'components' ]
+    };
+    const watch_log = ((id=0) => () => {
+        console.log({ id: id++, date: Date()});
+    })(0);
+
+    console.log({config});
+    watch_log();
+    const compiler = webpack(config);
+    compiler.watch(true, watch_details);
+
+    return;
+
+    function watch_details(err, stats) {
+		if (!config.watch || err) {
+			compiler.purgeInputFileSystem();
+		}
+
+		if (err) {
+			stats_hash = null;
+			console.error(err.stack || err);
+			if (err.details) {
+                console.error(err.details);
+            }
+            watch_log();
+			process.exit(1);
+		}
+
+		if (output_options.json) {
+			process.stdout.write(JSON.stringify(stats.toJson(output_options), null, 2) + "\n");
+		} else if (stats.hash !== stats_hash) {
+			stats_hash = stats.hash;
+			var statsString = stats.toString(output_options);
+			if (statsString) {
+				process.stdout.write(statsString + "\n");
+            }
+		}
+
+		if (!config.watch && stats.hasErrors()) {
+			process.on("exit", function() {
+                watch_log();
+				process.exit(2);
+			});
+		}
+        watch_log();
+    }
+}
+
+config.watch.__proto__.watch_it_happen = watch_it_happen;
+
 module.exports = config;

@@ -95,9 +95,9 @@
     "host_docker": "docker run -dit --rm -p 8080:8080 --name node --link mongo:mongo -v ${PWD}:${PWD} -w ${PWD} node bash",
     "host_babel": "babel server.js6 -w -o host.js",
     "host_watch": "nodemon host.js --verbose -i server.js6 -i database.js -i store.js -i client.jsx -i index.js -i index.js.map -i index.html -i index.css",
-    "host_shell": "node -i -e 'const server=require(\"./host.js\"); const {App, run} = server; app = run([\"<node>\", \"<host>\", \"--mongo\", \"mongodb://mongo:27017/nutrition\"]);'",
+    "host_shell": "node -i -e 'const server=require(\"./host.js\"); const {App, run} = server; app = run([\"<node>\", \"<host.js>\", \"--mongo\", \"mongodb://mongo:27017/nutrition\"]);'",
     "index_webpack": "webpack --config webpack.config.js",
-    "index_shell": "node -i -e 'const utils=require(\"./utils.js\"); const config = require(\"./webpack.config.js\"); const {watch} = utils; watch(config);'",
+    "index_shell": "node -i -e 'const config = require(\"./webpack.config.js\"); const {watch_it_happen} = config.watch; watch_it_happen(config);'",
     "index_server": "webpack-dev-server",
     "start": "node host.js --port 8080 --mongo mongodb://localhost:27017/nutrition",
     "test": "echo \"Error: no test specified\" && exit 1"
