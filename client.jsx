@@ -207,30 +207,31 @@ export function Nutrition({nutrition: n}) {
     }
 }
 
-export function DrawerMenuItems({menu, open, width, onRequestChange}) {
-    if (!menu) { return null; }
-    return (
-        <Drawer open={open} onRequestChange={onRequestChange} width={width}
-                docked={false} zDepth={2} openSecondary={true} docked={true}>
-          <AppBar title="Menu" onLeftIconButtonTouchTap={onRequestChange}/>
-            <MenuItem style={style().search}>
-              <TextField hintText="Search Text" fullWidth={true}/><br />
-            </MenuItem>
-            {menu.items.map((item,index) => (
-                <Route key={item._id} render={({history}) => (
-                    <MenuItem onTouchTap={goto(item, history)} style={style().menu}>
-                      <span style={style().index}>{index + 1 + "."}</span>
-                      {item.Item}
-                    </MenuItem>)}>
-                    </Route>
-            ))}
-        </Drawer>
-    );
+export class DrawerMenuItems extends Component {
 
-    function style() { return {
+    render() {
+        const {menu, open, width, value, search, match, onRequestChange} = this.props;
+        return (
+            <Drawer open={open} onRequestChange={onRequestChange} width={width}
+                    docked={false} zDepth={2} openSecondary={true} docked={true}>
+              <AppBar title="Menu" onLeftIconButtonTouchTap={onRequestChange}/>
+              <MenuItem style={this.style().search}>
+                <TextField floatingLabelText="Search" fullWidth={true} onChange={this.search_menu}/>
+              </MenuItem>
+              {menu.items.filter(this.match_menu)
+                  .map((item,index) => (
+                      <Route key={item._id} render={({history}) => (
+                          <MenuItem onTouchTap={this.goto(item, history)} style={this.style().menu}>
+                        <span style={this.style().index}>{index + 1 + "."}</span>
+                        {item.Item}
+                      </MenuItem>)}>
+                          </Route>
+                  ))}
+            </Drawer>
+        );
+    }
+    style = () => { return {
         search: {
-            margin:"0",
-            padding: "0"
         },
         menu : {
             // color: "white", backgroundColor: "#b0bec5"
@@ -240,12 +241,30 @@ export function DrawerMenuItems({menu, open, width, onRequestChange}) {
         }
     }; }
 
-    function goto(item, history) {
+    search_menu = (event) => {
+        console.log({search: event.target.value});
+        this.setState({search : event.target.value});
+    }
+
+    match_menu = (data) => {
+        console.log({match: this.state.search});
+        return ((!this.state.search) || (!!data.Item.match(new RegExp(this.state.search, "i"))));
+    };
+
+
+    goto = (item, history) => {
         return () => {
             history.push('/'+item._id);
         };
     }
-};
+
+    constructor(props) {
+        super(props);
+        this.state = {
+            search : ""
+        };
+    }
+}
 
 export function ConnectedDrawerMenuItems(props) {
     const BindedDrawer = connect(states(props), dispatches)(DrawerMenuItems);
