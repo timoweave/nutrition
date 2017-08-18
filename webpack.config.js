@@ -22,7 +22,7 @@ const js = { // rule
 };
 
 const jsx = { // rule
-    test : /\.jsx$/,
+    test : /\.js[x6]$/,
     exclude : /node_modules/,
     use : "babel-loader"
 };

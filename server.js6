@@ -161,9 +161,11 @@ class App {
             dir: path.resolve(__dirname),
             time : this.now()
         };
-        console.log(setup);
+        console.log({setup});
         await mongoose.connect(this.mongo, {useMongoClient: true});
+        console.log({status: { message: "mongoose connected"}});
         await this.app.listen(this.port);
+        console.log({status: { message:"node listening"}});
         return this;
     } catch (e) {
         throw e;
@@ -190,7 +192,7 @@ async function run(argv) { try {
     const {port, mongo} = App.parse(argv);
     const app = new App(port, mongo);
     await app.run();
-    console.log("running...");
+    console.log({status: {message: "running..."}});
     return app;
 } catch(e) {
     throw e;
